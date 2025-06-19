@@ -78,4 +78,4 @@ Il progetto simula un forum bancario vulnerabile a XSS, con un server aggiuntivo
    ```
 ---
 
-<sub><i>last update 06/06/2025</i></sub>
+<sub><i>last update 19/06/2025</i></sub>
