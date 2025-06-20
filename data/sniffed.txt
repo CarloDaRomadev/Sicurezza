@@ -1,9 +1,2 @@
-x, x
-nome, pass
-ciao, password
-x, y
-xyz, xyz
-x, y
-x, y
-x, y
-guytuyu, uytyutiu
+d, d
+das, x
